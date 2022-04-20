@@ -64,7 +64,7 @@ def logpdf_gauss(x, mu, cov):
         return -0.5*(len(mu)*np.log(2 * pi) + np.sum(np.log(cov)) + np.sum((x**2)/cov, axis=1))
     else:
         return -0.5*(len(mu)*np.log(2 * pi) + np.linalg.slogdet(cov)[1] + np.sum(x.dot(inv(cov)) * x, axis=1))
-                
+
 def train_gauss(x):
     """
     Estimates gaussian distribution from data.
@@ -85,7 +85,7 @@ def rand_gauss(n, mu, cov):
 
 def logpdf_gmm(x, ws, mus, covs):
     return logsumexp([np.log(w) + logpdf_gauss(x, m, c) for w, m, c in zip(ws, mus, covs)], axis=0)
-    
+
 
 def train_gmm(x, ws, mus, covs):
     """
@@ -98,7 +98,7 @@ def train_gmm(x, ws, mus, covs):
     parameters are mixture component mean vectors given by columns of M-by-D
     matrix MUs, covariance matrices given by M-by-D-by-D matrix COVs and vector
     of weights Ws.
-    """   
+    """
     gamma = np.vstack([np.log(w) + logpdf_gauss(x, m, c) for w, m, c in zip(ws, mus, covs)])
     logevidence = logsumexp(gamma, axis=0)
     gamma = np.exp(gamma - logevidence)
@@ -106,17 +106,17 @@ def train_gmm(x, ws, mus, covs):
     gammasum = gamma.sum(axis=1)
     ws = gammasum / len(x)
     mus = gamma.dot(x)/gammasum[:,np.newaxis]
-    
+
     if covs[0].ndim == 1: # diagonal covariance matrices
       covs = gamma.dot(x**2)/gammasum[:,np.newaxis] - mus**2
     else:
-      covs = np.array([(gamma[i]*x.T).dot(x)/gammasum[i] - mus[i][:, newaxis].dot(mus[[i]]) for i in range(len(ws))])        
+      covs = np.array([(gamma[i]*x.T).dot(x)/gammasum[i] - mus[i][:, newaxis].dot(mus[[i]]) for i in range(len(ws))])
     return ws, mus, covs, tll
 
 def rand_gmm(n, ws, mus, covs):
     """
     RAND_GAUSS  Gaussian mixture distributed random numbers.
-    X = RAND_GMM(N, Ws, MUs, COVs) returns matrix with N rows, where each 
+    X = RAND_GMM(N, Ws, MUs, COVs) returns matrix with N rows, where each
     column is a vector chosen from a distribution represnted by a Gaussian
     Mixture Model. The GMM parameters are mixture component mean vectors given
     by rows of M-by-D matrix MUs, covariance matrices given by M-by-D-by-D
@@ -177,7 +177,7 @@ def eval_nnet(x, w1, w2):
     - X are the input features, datapoints are stored column-wise
     - W1 weights of 1st layer (first column contain bias)
     - W2 weights of 2nd layer (first column contain bias)
-    
+
     Returns the network outputs (single dimensional)
     """
     h = logistic_sigmoid(np.c_[np.ones(len(x)), x].dot(w1))
@@ -245,7 +245,7 @@ def spectrogram(x, window, noverlap=None, nfft=None):
 
 def mfcc(s, window, noverlap, nfft, fs, nbanks, nceps):
     #MFCC Mel Frequency Cepstral Coefficients
-    #   CPS = MFCC(s, FFTL, Fs, WINDOW, NOVERLAP, NBANKS, NCEPS) returns 
+    #   CPS = MFCC(s, FFTL, Fs, WINDOW, NOVERLAP, NBANKS, NCEPS) returns
     #   NCEPS-by-M matrix of MFCC coeficients extracted form signal s, where
     #   M is the number of extracted frames, which can be computed as
     #   floor((length(S)-NOVERLAP)/(WINDOW-NOVERLAP)). Remaining parameters
@@ -261,7 +261,7 @@ def mfcc(s, window, noverlap, nfft, fs, nbanks, nceps):
     #
     #   See also SPECTROGRAM
 
-    # Add low level noise (40dB SNR) to avoid log of zeros 
+    # Add low level noise (40dB SNR) to avoid log of zeros
     snrdb = 40
     noise = rand(s.shape[0])
     s = s + noise.dot(norm(s, 2)) / norm(noise, 2) / (10 ** (snrdb / 20))
@@ -287,7 +287,7 @@ def raw8khz2mfcc(dir_name):
 
 def wav16khz2mfcc(dir_name):
     """
-    Loads all *.wav files from directory dir_name (must be 16kHz), converts them into MFCC 
+    Loads all *.wav files from directory dir_name (must be 16kHz), converts them into MFCC
     features (13 coefficients) and stores them into a dictionary. Keys are the file names
     and values and 2D numpy arrays of MFCC features.
     """
