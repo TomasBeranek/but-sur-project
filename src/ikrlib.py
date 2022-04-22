@@ -301,14 +301,15 @@ def wav16khz2mfcc(dir_name, verbose=True):
     return features
 
 
-def png2fea(dir_name):
+def png2fea(dir_name, verbose=True):
     """
     Loads all *.png images from directory dir_name into a dictionary. Keys are the file names
     and values and 2D numpy arrays with corresponding grayscale images
     """
     features = {}
     for f in glob(dir_name + '/*.png'):
-        print('Processing file: ', f)
+        if verbose:
+            print('Processing file: ', f)
         features[f] = imread(f, True).astype(np.float64)
     return features
 
