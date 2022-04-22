@@ -1,44 +1,66 @@
-from ikrlib import wav16khz2mfcc
+from ikrlib import wav16khz2mfcc, png2fea
 from audio_gmm import ModelAudioGMM
+from image_lin_classifier import ModelImageLinClassifier
 import sys
 from scipy import mean
+import numpy as np
 
 def train(train_target_dir, test_target_dir, train_non_target_dir, test_non_target_dir, verbose=True):
     if verbose:
         print("NOTE: Running training on\n\t-train_target_dir: '%s'\n\t-train_non_target_dir: '%s'\n\t-train_non_target_dir: '%s'\n\t-test_non_target_dir: '%s'" % (train_target_dir, test_target_dir, train_non_target_dir, test_non_target_dir))
 
     # load audio data
-    train_t = wav16khz2mfcc(train_target_dir, verbose)
-    train_n = wav16khz2mfcc(train_non_target_dir, verbose)
-    test_t  = wav16khz2mfcc(test_target_dir, verbose)
-    test_n  = wav16khz2mfcc(test_non_target_dir, verbose)
+    """audio_train_t = wav16khz2mfcc(train_target_dir, verbose)
+    audio_train_n = wav16khz2mfcc(train_non_target_dir, verbose)
+    audio_test_t  = wav16khz2mfcc(test_target_dir, verbose)
+    audio_test_n  = wav16khz2mfcc(test_non_target_dir, verbose)
 
     # audio data preprocessing
 
     # init audio models
     model_audio_gmm = ModelAudioGMM(M_t=3, M_n=20, train_cycles=50, verbose=verbose)
-    model_audio_gmm.train(train_t.values(), train_n.values())
-
-    # load image data
+    model_audio_gmm.train(audio_train_t.values(), audio_train_n.values())
 
     # test audio models
-    results_audio_gmm_t = model_audio_gmm.test(test_t, 0.5)
-    results_audio_gmm_n = model_audio_gmm.test(test_n, 0.5)
+    results_audio_gmm_t = model_audio_gmm.test(audio_test_t, 0.5)
+    results_audio_gmm_n = model_audio_gmm.test(audio_test_n, 0.5)
 
-    # print results
-    precision = len([pred for _,pred in results_audio_gmm_t.values() if pred]) / len(results_audio_gmm_t)
-    print("\nModel: AudioGMM     Samples: Target     Precision: %.2f %%" % (100*precision))
-    for file, result in results_audio_gmm_t.items():
-        log_prob, decision = result
-        file = file.split('/')[-1].split('.')[0]
-        print("%s %f %d" % (file, log_prob, decision))
+    # print audio results
+    print_results(results_audio_gmm_t, "AudioGMM", "Target")
+    print_results(results_audio_gmm_n, "AudioGMM", "Non-target")"""
 
-    precision = len([pred for _,pred in results_audio_gmm_n.values() if not pred]) / len(results_audio_gmm_n)
-    print("\nModel: AudioGMM    Samples: Non-target     Precision: %.2f %%" % (100*precision))
-    for file, result in results_audio_gmm_n.items():
-        log_prob, decision = result
+    # load image data
+    image_train_t = png2fea(train_target_dir, verbose)
+    image_train_n = png2fea(train_non_target_dir, verbose)
+    image_test_t  = png2fea(test_target_dir, verbose)
+    image_test_n  = png2fea(test_non_target_dir, verbose)
+
+    # init image models
+    model_image_lin_classifier = ModelImageLinClassifier(dimensions=40)
+    model_image_lin_classifier.train(list(image_train_t.values()), list(image_train_n.values()))
+
+    # test image models
+    results_model_image_lin_classifier_t = model_image_lin_classifier.test(image_test_t)
+    results_model_image_lin_classifier_n = model_image_lin_classifier.test(image_test_n)
+
+    # print image results
+    print_results(results_model_image_lin_classifier_t, "ImageLinClassifier", "Target")
+    print_results(results_model_image_lin_classifier_n, "ImageLinClassifier", "Non-target")
+
+
+def print_results(results, model_name, data_type):
+    precision = None
+
+    if data_type == "Target":
+        precision = len([pred for _,pred in results.values() if pred]) / len(results)
+    elif data_type == "Non-target":
+        precision = len([pred for _,pred in results.values() if not pred]) / len(results)
+
+    print("\nModel: %s     Samples: %s     Precision: %.2f %%" % (model_name, data_type, (100*precision)))
+    for file, (log_prob, decision) in results.items():
         file = file.split('/')[-1].split('.')[0]
-        print("%s %f %d" % (file, log_prob, decision))
+        #print("%s %f %d" % (file, log_prob, decision))
+
 
 def evaluate(test_dir, verbose=True):
     print("NOTE: Running evaluation on '%s'." % test_dir)
