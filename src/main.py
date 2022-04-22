@@ -1,6 +1,7 @@
 from ikrlib import wav16khz2mfcc, png2fea
 from audio_gmm import ModelAudioGMM
 from image_lin_classifier import ModelImageLinClassifier
+from image_lin_regression import ModelImageLinRegression
 import sys
 from scipy import mean
 import numpy as np
@@ -10,7 +11,7 @@ def train(train_target_dir, test_target_dir, train_non_target_dir, test_non_targ
         print("NOTE: Running training on\n\t-train_target_dir: '%s'\n\t-train_non_target_dir: '%s'\n\t-train_non_target_dir: '%s'\n\t-test_non_target_dir: '%s'" % (train_target_dir, test_target_dir, train_non_target_dir, test_non_target_dir))
 
     # load audio data
-    """audio_train_t = wav16khz2mfcc(train_target_dir, verbose)
+    audio_train_t = wav16khz2mfcc(train_target_dir, verbose)
     audio_train_n = wav16khz2mfcc(train_non_target_dir, verbose)
     audio_test_t  = wav16khz2mfcc(test_target_dir, verbose)
     audio_test_n  = wav16khz2mfcc(test_non_target_dir, verbose)
@@ -27,7 +28,7 @@ def train(train_target_dir, test_target_dir, train_non_target_dir, test_non_targ
 
     # print audio results
     print_results(results_audio_gmm_t, "AudioGMM", "Target")
-    print_results(results_audio_gmm_n, "AudioGMM", "Non-target")"""
+    print_results(results_audio_gmm_n, "AudioGMM", "Non-target")
 
     # load image data
     image_train_t = png2fea(train_target_dir, verbose)
@@ -36,16 +37,27 @@ def train(train_target_dir, test_target_dir, train_non_target_dir, test_non_targ
     image_test_n  = png2fea(test_non_target_dir, verbose)
 
     # init image models
-    model_image_lin_classifier = ModelImageLinClassifier(dimensions=40)
+    model_image_lin_classifier = ModelImageLinClassifier(dimensions=45)
     model_image_lin_classifier.train(list(image_train_t.values()), list(image_train_n.values()))
+
+    # TODO: if the number of training epochs for linear regression is higher than +-40, the code fails
+    model_image_lin_regression = ModelImageLinRegression(dimensions=model_image_lin_classifier.dimensions, verbose=verbose)
+    model_image_lin_regression.train(list(image_train_t.values()), list(image_train_n.values()), epochs=5, init_w=model_image_lin_classifier.w, init_w0=model_image_lin_classifier.w0)
 
     # test image models
     results_model_image_lin_classifier_t = model_image_lin_classifier.test(image_test_t)
     results_model_image_lin_classifier_n = model_image_lin_classifier.test(image_test_n)
 
+    results_model_image_lin_regression_t = model_image_lin_regression.test(image_test_t)
+    results_model_image_lin_regression_n = model_image_lin_regression.test(image_test_n)
+
+
     # print image results
     print_results(results_model_image_lin_classifier_t, "ImageLinClassifier", "Target")
     print_results(results_model_image_lin_classifier_n, "ImageLinClassifier", "Non-target")
+
+    print_results(results_model_image_lin_regression_t, "ImageLinRegression", "Target")
+    print_results(results_model_image_lin_regression_n, "ImageLinRegression", "Non-target")
 
 
 def print_results(results, model_name, data_type):
@@ -56,7 +68,7 @@ def print_results(results, model_name, data_type):
     elif data_type == "Non-target":
         precision = len([pred for _,pred in results.values() if not pred]) / len(results)
 
-    print("\nModel: %s     Samples: %s     Precision: %.2f %%" % (model_name, data_type, (100*precision)))
+    print("Model: %s     Samples: %s     Precision: %.2f %%" % (model_name, data_type, (100*precision)))
     for file, (log_prob, decision) in results.items():
         file = file.split('/')[-1].split('.')[0]
         #print("%s %f %d" % (file, log_prob, decision))
