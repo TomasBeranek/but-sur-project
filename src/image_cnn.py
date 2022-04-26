@@ -4,6 +4,8 @@ import numpy as np
 from sklearn.utils import shuffle
 import tensorflow as tf
 import matplotlib.pyplot as plt
+import os
+import shutil
 
 class ModelImageCNN():
     def __init__(self, verbose=True):
@@ -30,9 +32,6 @@ class ModelImageCNN():
                       metrics=['accuracy'])
 
         # prepare train data
-        train_n = np.array(train_n)
-        train_n = train_n[np.random.randint(len(train_n), size=len(train_t)), :]
-
         x_train = np.r_[train_t, train_n]
         y_train = np.r_[np.ones(len(train_t)), np.zeros(len(train_n))]
 
@@ -81,3 +80,13 @@ class ModelImageCNN():
             result[file] = (score, score > 0.5)
 
         return result
+
+    def save(self, path):
+        # remove the file if it already exists
+        if os.path.exists(path):
+            shutil.rmtree(path)
+
+        self.model.save(path)
+
+    def load(self, path):
+        self.model = tf.keras.models.load_model(path)

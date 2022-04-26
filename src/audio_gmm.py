@@ -2,10 +2,11 @@ from ikrlib import train_gmm, logpdf_gmm
 import numpy as np
 from numpy.random import randint
 from math import prod
-
+import os
+import json
 
 class ModelAudioGMM():
-    def __init__(self, M_t, M_n, train_cycles, verbose=True):
+    def __init__(self, M_t=None, M_n=None, train_cycles=None, verbose=True):
         if verbose:
             print("NOTE: ModelAudioGMM initialized.")
         self.verbose = verbose
@@ -49,3 +50,29 @@ class ModelAudioGMM():
             result[file] = (prediction_log_prob, prediction)
 
         return result
+
+    def save(self, path):
+        # remove the file if it already exists
+        if os.path.exists(path):
+            os.remove(path)
+            
+        model_dict = {  "Ws_t":     self.Ws_t,
+                        "MUs_t":    self.MUs_t,
+                        "COVs_t":   self.COVs_t,
+                        "Ws_n":     self.Ws_n,
+                        "MUs_n":    self.MUs_n,
+                        "COVs_n":   self.COVs_n
+                        }
+
+        with open(path, "w") as file:
+            json.dump(model_dict, file, indent=4)
+
+    def load(self, path):
+        model_dict = json.load(path)
+
+        self.Ws_t   = model_dict['Ws_t']
+        self.MUs_t  = model_dict['MUs_t']
+        self.COVs_t = model_dict['COVs_t']
+        self.Ws_n   = model_dict['Ws_n']
+        self.MUs_n  = model_dict['MUs_n']
+        self.COVs_n = model_dict['COVs_n']
