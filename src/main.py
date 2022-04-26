@@ -2,6 +2,7 @@ from ikrlib import wav16khz2mfcc, png2fea
 from audio_gmm import ModelAudioGMM
 from image_lin_classifier import ModelImageLinClassifier
 from image_lin_regression import ModelImageLinRegression
+from image_cnn import ModelImageCNN
 import sys
 from scipy import mean
 import numpy as np
@@ -44,6 +45,9 @@ def train(train_target_dir, test_target_dir, train_non_target_dir, test_non_targ
     model_image_lin_regression = ModelImageLinRegression(dimensions=model_image_lin_classifier.dimensions, verbose=verbose)
     model_image_lin_regression.train(list(image_train_t.values()), list(image_train_n.values()), epochs=5, init_w=model_image_lin_classifier.w, init_w0=model_image_lin_classifier.w0)
 
+    model_image_cnn = ModelImageCNN(verbose=verbose)
+    model_image_cnn.train(list(image_train_t.values()), list(image_train_n.values()), list(image_test_t.values()), list(image_test_n.values()), batch_size=128, epochs=50)
+
     # test image models
     results_model_image_lin_classifier_t = model_image_lin_classifier.test(image_test_t)
     results_model_image_lin_classifier_n = model_image_lin_classifier.test(image_test_n)
@@ -51,6 +55,8 @@ def train(train_target_dir, test_target_dir, train_non_target_dir, test_non_targ
     results_model_image_lin_regression_t = model_image_lin_regression.test(image_test_t)
     results_model_image_lin_regression_n = model_image_lin_regression.test(image_test_n)
 
+    results_mode_image_cnn_t = model_image_cnn.test(image_test_t)
+    results_mode_image_cnn_n = model_image_cnn.test(image_test_n)
 
     # print image results
     print_results(results_model_image_lin_classifier_t, "ImageLinClassifier", "Target")
@@ -59,6 +65,8 @@ def train(train_target_dir, test_target_dir, train_non_target_dir, test_non_targ
     print_results(results_model_image_lin_regression_t, "ImageLinRegression", "Target")
     print_results(results_model_image_lin_regression_n, "ImageLinRegression", "Non-target")
 
+    print_results(results_mode_image_cnn_t, "ImageCNN", "Target")
+    print_results(results_mode_image_cnn_n, "ImageCNN", "Non-target")
 
 def print_results(results, model_name, data_type):
     precision = None
@@ -71,7 +79,7 @@ def print_results(results, model_name, data_type):
     print("Model: %s     Samples: %s     Precision: %.2f %%" % (model_name, data_type, (100*precision)))
     for file, (log_prob, decision) in results.items():
         file = file.split('/')[-1].split('.')[0]
-        #print("%s %f %d" % (file, log_prob, decision))
+        print("%s %f %d" % (file, log_prob, decision))
 
 
 def evaluate(test_dir, verbose=True):
