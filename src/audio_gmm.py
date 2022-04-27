@@ -16,6 +16,17 @@ class ModelAudioGMM():
 
 
     def train(self, train_t, train_n):
+        # audio data preprocessing
+        # cut off first 1.5s
+        # TODO: iteration is very slow
+        train_t = list(train_t)
+        for i in range(0,len(train_t)):
+           train_t[i] = train_t[i][150:]
+
+        train_n = list(train_n)
+        for i in range(0,len(train_n)):
+           train_n[i] = train_n[i][150:]
+
         train_t = np.vstack(train_t)
         train_n = np.vstack(train_n)
 
