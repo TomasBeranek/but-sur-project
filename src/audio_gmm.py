@@ -73,6 +73,7 @@ class ModelAudioGMM():
         result = {}
 
         for file, sample in test.items():
+            file = ''.join(file.split('/')[-1].split('.')[:-1])
             ll_t = logpdf_gmm(sample, self.Ws_t, self.MUs_t, self.COVs_t)
             ll_n = logpdf_gmm(sample, self.Ws_n, self.MUs_n, self.COVs_n)
             log_joint_prob_t = sum(ll_t) + np.log(P_t)

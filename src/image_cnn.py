@@ -92,10 +92,11 @@ class ModelImageCNN():
         result = {}
 
         for file, image in test.items():
+            file = ''.join(file.split('/')[-1].split('.')[:-1])
             image = image.reshape(1,80,80)
 
             # make predictions
-            score = self.model.predict([image])
+            score = self.model.predict([image])[0][0]
             result[file] = (score, score > 0.5)
 
         return result
