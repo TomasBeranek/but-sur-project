@@ -38,12 +38,33 @@ class ModelAudioGMM():
         self.COVs_n = [np.cov(train_n.T)] * self.M_n
         self.Ws_n = np.ones(self.M_n) / self.M_n
 
+        self.prev_TTL_t = None
+        self.prev_TTL_n = None
+        TTL_t = None
+        TTL_n = None
+        finished_t = False
+        finished_n = False
+
         # run EM algorithm
         for i in range(self.train_cycles):
             self.Ws_t, self.MUs_t, self.COVs_t, TTL_t = train_gmm(train_t, self.Ws_t, self.MUs_t, self.COVs_t)
             self.Ws_n, self.MUs_n, self.COVs_n, TTL_n = train_gmm(train_n, self.Ws_n, self.MUs_n, self.COVs_n)
+
+            if self.prev_TTL_t == None or abs(self.prev_TTL_t - TTL_t) > 10:
+                self.prev_TTL_t = TTL_t
+            else:
+                finished_t = True
+
+            if self.prev_TTL_n == None or abs(self.prev_TTL_n - TTL_n) > 10:
+                self.prev_TTL_n = TTL_n
+            else:
+                finished_n = True
+
             if self.verbose:
                 print("Iteration %d \tTotal log-likelyhood target: %f \t\t non-target: %f" % (i+1, TTL_t, TTL_n))
+
+            if finished_t and finished_n:
+                break
 
     def test(self, test, aprior_prob_t):
         P_t = aprior_prob_t
