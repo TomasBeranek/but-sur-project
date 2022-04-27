@@ -87,24 +87,24 @@ class ModelAudioGMM():
         # remove the file if it already exists
         if os.path.exists(path):
             os.remove(path)
-            
-        model_dict = {  "Ws_t":     self.Ws_t,
-                        "MUs_t":    self.MUs_t,
-                        "COVs_t":   self.COVs_t,
-                        "Ws_n":     self.Ws_n,
-                        "MUs_n":    self.MUs_n,
-                        "COVs_n":   self.COVs_n
-                        }
+
+        model_dict = {  "Ws_t":     self.Ws_t.tolist(),
+                        "MUs_t":    self.MUs_t.tolist(),
+                        "COVs_t":   self.COVs_t.tolist(),
+                        "Ws_n":     self.Ws_n.tolist(),
+                        "MUs_n":    self.MUs_n.tolist(),
+                        "COVs_n":   self.COVs_n.tolist()}
 
         with open(path, "w") as file:
             json.dump(model_dict, file, indent=4)
 
     def load(self, path):
-        model_dict = json.load(path)
+        with open(path) as file:
+            model_dict = json.load(file)
 
-        self.Ws_t   = model_dict['Ws_t']
-        self.MUs_t  = model_dict['MUs_t']
-        self.COVs_t = model_dict['COVs_t']
-        self.Ws_n   = model_dict['Ws_n']
-        self.MUs_n  = model_dict['MUs_n']
-        self.COVs_n = model_dict['COVs_n']
+        self.Ws_t   = np.array(model_dict['Ws_t'])
+        self.MUs_t  = np.array(model_dict['MUs_t'])
+        self.COVs_t = np.array(model_dict['COVs_t'])
+        self.Ws_n   = np.array(model_dict['Ws_n'])
+        self.MUs_n  = np.array(model_dict['MUs_n'])
+        self.COVs_n = np.array(model_dict['COVs_n'])
