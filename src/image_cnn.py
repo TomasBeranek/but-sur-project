@@ -11,7 +11,7 @@ class ModelImageCNN():
     def __init__(self, verbose=True):
         self.verbose = verbose
 
-    def train(self, train_t, train_n, val_t, val_n, batch_size, epochs):
+    def train(self, train_t, train_n, val_t, val_n, batch_size, epochs, path=None):
         # model definition
         model = Sequential()
         model.add(layers.Conv2D(filters=6, kernel_size=(5, 5), activation='relu', input_shape=(80, 80, 1)))
@@ -48,12 +48,31 @@ class ModelImageCNN():
         x_test = np.r_[x_test].reshape(x_test.shape[0], 80, 80, 1)
         y_test = np.r_[y_test].reshape(y_test.shape[0], 1)
 
+        history = []
+
         # train model on BALANCED data
-        history = model.fit(x_train, y_train,
-                            batch_size=batch_size,
-                            epochs=epochs,
-                            verbose=1,
-                            validation_data=(x_test, y_test))
+        if path:
+            # safe model with lowest validation loss
+            checkpoint = tf.keras.callbacks.ModelCheckpoint( path,
+                                                             monitor='val_loss',
+                                                             verbose=1,
+                                                             save_best_only=True,
+                                                             save_weights_only=False,
+                                                             mode='auto',
+                                                             save_frequency=1)
+
+            history = model.fit(x_train, y_train,
+                                batch_size=batch_size,
+                                epochs=epochs,
+                                verbose=1,
+                                validation_data=(x_test, y_test),
+                                callbacks=[checkpoint])
+        else:
+            history = model.fit(x_train, y_train,
+                                batch_size=batch_size,
+                                epochs=epochs,
+                                verbose=1,
+                                validation_data=(x_test, y_test))
 
         # print learning graph
         acc = history.history['accuracy']

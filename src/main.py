@@ -46,7 +46,7 @@ def train(train_target_dir, test_target_dir, train_non_target_dir, test_non_targ
     # model_image_lin_regression.train(list(image_train_t.values()), list(image_train_n.values()), epochs=5, init_w=model_image_lin_classifier.w, init_w0=model_image_lin_classifier.w0)
 
     model_image_cnn = ModelImageCNN(verbose=verbose)
-    model_image_cnn.train(list(image_train_t.values()), list(image_train_n.values()), list(image_test_t.values()), list(image_test_n.values()), batch_size=16, epochs=25)
+    model_image_cnn.train(list(image_train_t.values()), list(image_train_n.values()), list(image_test_t.values()), list(image_test_n.values()), batch_size=16, epochs=25, path=cnn_file)
 
     # # test image models
     # results_model_image_lin_classifier_t = model_image_lin_classifier.test(image_test_t)
@@ -69,8 +69,7 @@ def train(train_target_dir, test_target_dir, train_non_target_dir, test_non_targ
     print_results(results_mode_image_cnn_n, "ImageCNN", "Non-target")
 
     # optionally save models
-    if cnn_file:
-        model_image_cnn.save(cnn_file)
+    # cnn model is saved in train method
 
     # if gmm_file:
     #     model_audio_gmm.save(gmm_file)
